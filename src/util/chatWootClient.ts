@@ -173,7 +173,17 @@ export default class chatWootClient {
   // }
 
   async sendMessage(client: any, message: any) {
+    console.log('>>>>>> WPPCONNECT --> CHATWOOT:', message)
     if (message.isGroupMsg || message.chatId.indexOf('@broadcast') > 0) return;
+
+    if (message?.sender?.formattedName?.match(/^\+[ 0-9\-]/)) {
+      const senderId = message.sender.formattedName.replace(/\D/g, "");
+      const formattedName = message.sender.pushname;
+
+      message.chatId = senderId;
+      message.sender.id = senderId;
+      message.formattedName = formattedName;
+    }
 
     const contact = await this.createContact(message);
     const conversation = await this.createConversation(
@@ -294,30 +304,20 @@ export default class chatWootClient {
     const contact = await this.findContact(body.phone_number.replace('+', ''));
     if (contact && contact.meta.count > 0) return contact.payload[0];
 
-    try {
-      const data = await this.api.post(
-        `api/v1/accounts/${this.account_id}/contacts`,
-        body
-      );
-      return data.data.payload.contact;
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
+    const data = await this.api.post(
+      `api/v1/accounts/${this.account_id}/contacts`,
+      body
+    );
+    return data.data.payload.contact;
   }
 
   async findConversation(contact: any) {
-    try {
-      const { data } = await this.api.get(
-        `api/v1/accounts/${this.account_id}/contacts/${contact.id}/conversations`
-      );
-      return data.payload.find(
-        (e: any) => e.inbox_id == this.inbox_id && e.status != 'resolved'
-      );
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
+    const { data } = await this.api.get(
+      `api/v1/accounts/${this.account_id}/contacts/${contact.id}/conversations`
+    );
+    return data.payload.find(
+      (e: any) => e.inbox_id == this.inbox_id && e.status != 'resolved'
+    );
   }
 
   async createConversation(contact: any, source_id: any) {
@@ -331,15 +331,10 @@ export default class chatWootClient {
       status: 'open',
     };
 
-    try {
-      const { data } = await this.api.post(
-        `api/v1/accounts/${this.account_id}/conversations`,
-        body
-      );
-      return data;
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
+    const { data } = await this.api.post(
+      `api/v1/accounts/${this.account_id}/conversations`,
+      body
+    );
+    return data;
   }
 }
