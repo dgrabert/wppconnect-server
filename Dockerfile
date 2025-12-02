@@ -43,7 +43,8 @@ WORKDIR /usr/src/wpp-server/
 RUN apk add --no-cache \
     chromium \
     vips \
-    fftw
+    fftw \
+    curl
 
 EXPOSE 21465
 ENTRYPOINT ["node", "dist/server.js"]
